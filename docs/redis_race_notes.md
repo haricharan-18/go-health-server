@@ -10,8 +10,8 @@ Redis commands are atomic individually, but **multi-step operations** (read → 
 ### 1. Read-Modify-Write
 ```
 GET counter          → 100
-# Another client increments here
-SET counter 101      → Should be 102, but it's 101!
+# Another client increments here (counter is now 101)
+SET counter 101      → Overwrites what should have become 102
 ```
 
 **Fix:** Use atomic commands
