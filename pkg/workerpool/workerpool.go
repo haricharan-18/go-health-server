@@ -43,7 +43,7 @@ func NewWorkerPool(numWorkers, jobQueueSize int) *WorkerPool {
 func (wp *WorkerPool) Start(ctx context.Context, processor func(Job) Result) {
 	for i := 0; i < wp.numWorkers; i++ {
 		wp.wg.Add(1)
-		go func(workerID int) {
+		go func() {
 			defer wp.wg.Done()
 			for {
 				select {
@@ -57,7 +57,7 @@ func (wp *WorkerPool) Start(ctx context.Context, processor func(Job) Result) {
 					return // Context cancelled, worker exits
 				}
 			}
-		}(i)
+		}()
 	}
 }
 
