@@ -23,7 +23,7 @@ INCR counter         → Always correct
 ```
 GET stock:item123    → 5
 # Another client buys 3
-DECRBY stock:item123 2  → Stock is now -1 (oversold!)
+DECRBY stock:item123 4  → Stock is now -2 (oversold!)
 ```
 
 **Fix:** Use Lua script for atomic check-and-act
