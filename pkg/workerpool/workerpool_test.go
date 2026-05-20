@@ -2,23 +2,16 @@ package workerpool
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 )
 
 // Simple processor: squares integers
-func squareProcessor(job Job) Result {
-	if num, ok := job.Data.(int); ok {
-		return Result{
-			Job:    job,
-			Output: num * num,
-			Err:    nil,
-		}
-	}
-	return Result{
+func squareProcessor(job Job[int]) Result[int, int] {
+	return Result[int, int]{
 		Job: job,
-		Err: fmt.Errorf("invalid data type"),
+		Output: job.Data * job.Data,
+		Err:    nil,
 	}
 }
 
@@ -26,12 +19,12 @@ func TestWorkerPoolBasic(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool := NewWorkerPool(3, 10)
+	pool := NewWorkerPool[int, int](3, 10)
 	pool.Start(ctx, squareProcessor)
 
 	// Submit 5 jobs
 	for i := 1; i <= 5; i++ {
-		if err := pool.Submit(Job{ID: i, Data: i}); err != nil {
+		if err := pool.Submit(Job[int]{ID: i, Data: i}); err != nil {
 			t.Fatalf("failed to submit job: %v", err)
 		}
 	}
@@ -50,7 +43,7 @@ func TestWorkerPoolBasic(t *testing.T) {
 				continue
 			}
 			mu.Lock()
-			results[result.Job.ID] = result.Output.(int)
+			results[result.Job.ID] = result.Output
 			mu.Unlock()
 		}
 	}()
@@ -71,7 +64,7 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool := NewWorkerPool(5, 100)
+	pool := NewWorkerPool[int, int](5, 100)
 	pool.Start(ctx, squareProcessor)
 
 	// Submit 100 jobs concurrently from multiple goroutines
@@ -82,7 +75,7 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 	for i := 0; i < numJobs; i++ {
 		go func(id int) {
 			defer submitWg.Done()
-			pool.Submit(Job{ID: id, Data: id})
+			pool.Submit(Job[int]{ID: id, Data: id})
 		}(i)
 	}
 
@@ -104,16 +97,16 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 }
 
 func TestWorkerPoolSubmitAfterStopReturnsError(t *testing.T) {
-	pool := NewWorkerPool(1, 1)
+	pool := NewWorkerPool[int, int](1, 1)
 	pool.Stop()
 
-	if err := pool.Submit(Job{ID: 1, Data: 1}); err == nil {
+	if err := pool.Submit(Job[int]{ID: 1, Data: 1}); err == nil {
 		t.Fatalf("expected error when submitting to stopped pool")
 	}
 }
 
 func TestWorkerPoolStopCanBeCalledTwice(t *testing.T) {
-	pool := NewWorkerPool(1, 1)
+	pool := NewWorkerPool[int, int](1, 1)
 	pool.Stop()
 	pool.Stop()
 }

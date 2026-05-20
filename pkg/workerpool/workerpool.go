@@ -7,23 +7,23 @@ import (
 )
 
 // Job represents a unit of work
-type Job struct {
+type Job[T any] struct {
 	ID   int
-	Data interface{}
+	Data T
 }
 
 // Result represents the output of processing a Job
-type Result struct {
-	Job    Job
-	Output interface{}
+type Result[T any, R any] struct {
+	Job    Job[T]
+	Output R
 	Err    error
 }
 
 // WorkerPool manages a pool of goroutines that process jobs
-type WorkerPool struct {
+type WorkerPool[T any, R any] struct {
 	numWorkers int
-	jobs       chan Job
-	results    chan Result
+	jobs       chan Job[T]
+	results    chan Result[T, R]
 	wg         sync.WaitGroup
 	mu         sync.RWMutex
 	closed     bool
@@ -31,16 +31,16 @@ type WorkerPool struct {
 }
 
 // NewWorkerPool creates a new worker pool
-func NewWorkerPool(numWorkers, jobQueueSize int) *WorkerPool {
-	return &WorkerPool{
+func NewWorkerPool[T any, R any](numWorkers, jobQueueSize int) *WorkerPool[T, R] {
+	return &WorkerPool[T, R]{
 		numWorkers: numWorkers,
-		jobs:       make(chan Job, jobQueueSize),
-		results:    make(chan Result, jobQueueSize),
+		jobs:       make(chan Job[T], jobQueueSize),
+		results:    make(chan Result[T, R], jobQueueSize),
 	}
 }
 
 // Start initializes the worker goroutines
-func (wp *WorkerPool) Start(ctx context.Context, processor func(Job) Result) {
+func (wp *WorkerPool[T, R]) Start(ctx context.Context, processor func(Job[T]) Result[T, R]) {
 	for i := 0; i < wp.numWorkers; i++ {
 		wp.wg.Add(1)
 		go func() {
@@ -62,7 +62,7 @@ func (wp *WorkerPool) Start(ctx context.Context, processor func(Job) Result) {
 }
 
 // Submit adds a job to the queue
-func (wp *WorkerPool) Submit(job Job) error {
+func (wp *WorkerPool[T, R]) Submit(job Job[T]) error {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
@@ -79,12 +79,12 @@ func (wp *WorkerPool) Submit(job Job) error {
 }
 
 // Results returns the results channel for reading
-func (wp *WorkerPool) Results() <-chan Result {
+func (wp *WorkerPool[T, R]) Results() <-chan Result[T, R] {
 	return wp.results
 }
 
 // Stop gracefully shuts down the worker pool
-func (wp *WorkerPool) Stop() {
+func (wp *WorkerPool[T, R]) Stop() {
 	wp.stopOnce.Do(func() {
 		wp.mu.Lock()
 		wp.closed = true
