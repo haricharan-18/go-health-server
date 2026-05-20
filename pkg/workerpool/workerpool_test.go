@@ -102,3 +102,18 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 		t.Errorf("expected %d results, got %d", numJobs, count)
 	}
 }
+
+func TestWorkerPoolSubmitAfterStopReturnsError(t *testing.T) {
+	pool := NewWorkerPool(1, 1)
+	pool.Stop()
+
+	if err := pool.Submit(Job{ID: 1, Data: 1}); err == nil {
+		t.Fatalf("expected error when submitting to stopped pool")
+	}
+}
+
+func TestWorkerPoolStopCanBeCalledTwice(t *testing.T) {
+	pool := NewWorkerPool(1, 1)
+	pool.Stop()
+	pool.Stop()
+}

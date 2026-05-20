@@ -25,6 +25,9 @@ type WorkerPool struct {
 	jobs       chan Job
 	results    chan Result
 	wg         sync.WaitGroup
+	mu         sync.RWMutex
+	closed     bool
+	stopOnce   sync.Once
 }
 
 // NewWorkerPool creates a new worker pool
@@ -60,6 +63,13 @@ func (wp *WorkerPool) Start(ctx context.Context, processor func(Job) Result) {
 
 // Submit adds a job to the queue
 func (wp *WorkerPool) Submit(job Job) error {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	if wp.closed {
+		return fmt.Errorf("worker pool stopped")
+	}
+
 	select {
 	case wp.jobs <- job:
 		return nil
@@ -75,7 +85,13 @@ func (wp *WorkerPool) Results() <-chan Result {
 
 // Stop gracefully shuts down the worker pool
 func (wp *WorkerPool) Stop() {
-	close(wp.jobs)      // No more jobs accepted
-	wp.wg.Wait()        // Wait for all workers to finish
-	close(wp.results)   // Close results channel
+	wp.stopOnce.Do(func() {
+		wp.mu.Lock()
+		wp.closed = true
+		close(wp.jobs) // No more jobs accepted
+		wp.mu.Unlock()
+
+		wp.wg.Wait()      // Wait for all workers to finish
+		close(wp.results) // Close results channel
+	})
 }
