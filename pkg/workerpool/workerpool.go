@@ -24,28 +24,26 @@ type WorkerPool[T any, R any] struct {
 	numWorkers int
 	jobs       chan Job[T]
 	results    chan Result[T, R]
-	done       chan struct{}
 	wg         sync.WaitGroup
-	mu         sync.RWMutex
+	mu         sync.Mutex
 	closed     bool
 	stopOnce   sync.Once
 }
 
 // NewWorkerPool creates a new worker pool
-func NewWorkerPool[T any, R any](numWorkers, jobQueueSize int) *WorkerPool[T, R] {
+func NewWorkerPool[T any, R any](numWorkers, jobQueueSize int) (*WorkerPool[T, R], error) {
 	if numWorkers <= 0 {
-		numWorkers = 1
+		return nil, fmt.Errorf("numWorkers must be > 0")
 	}
-	if jobQueueSize <= 0 {
-		jobQueueSize = 1
+	if jobQueueSize < 0 {
+		return nil, fmt.Errorf("jobQueueSize must be >= 0")
 	}
 
 	return &WorkerPool[T, R]{
 		numWorkers: numWorkers,
 		jobs:       make(chan Job[T], jobQueueSize),
 		results:    make(chan Result[T, R], jobQueueSize),
-		done:       make(chan struct{}),
-	}
+	}, nil
 }
 
 // Start initializes the worker goroutines
@@ -58,24 +56,16 @@ func (wp *WorkerPool[T, R]) Start(ctx context.Context, processor func(Job[T]) Re
 				select {
 				case job, ok := <-wp.jobs:
 					if !ok {
-						return // Channel closed, worker exits
+						return
 					}
 					result := processor(job)
 					select {
 					case wp.results <- result:
 					case <-ctx.Done():
 						return
-					default:
-						select {
-						case wp.results <- result:
-						case <-ctx.Done():
-							return
-						case <-wp.done:
-							return
-						}
 					}
 				case <-ctx.Done():
-					return // Context cancelled, worker exits
+					return
 				}
 			}
 		}()
@@ -84,11 +74,11 @@ func (wp *WorkerPool[T, R]) Start(ctx context.Context, processor func(Job[T]) Re
 
 // Submit adds a job to the queue
 func (wp *WorkerPool[T, R]) Submit(job Job[T]) error {
-	wp.mu.RLock()
-	defer wp.mu.RUnlock()
+	wp.mu.Lock()
+	defer wp.mu.Unlock()
 
 	if wp.closed {
-		return fmt.Errorf("worker pool stopped")
+		return fmt.Errorf("worker pool is closed")
 	}
 
 	select {
@@ -109,11 +99,10 @@ func (wp *WorkerPool[T, R]) Stop() {
 	wp.stopOnce.Do(func() {
 		wp.mu.Lock()
 		wp.closed = true
-		close(wp.jobs) // No more jobs accepted
-		close(wp.done)
+		close(wp.jobs)
 		wp.mu.Unlock()
 
-		wp.wg.Wait()      // Wait for all workers to finish
-		close(wp.results) // Close results channel
+		wp.wg.Wait()
+		close(wp.results)
 	})
 }

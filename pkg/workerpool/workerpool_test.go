@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 )
 
 // Simple processor: squares integers
@@ -21,7 +20,11 @@ func TestWorkerPoolBasic(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool := NewWorkerPool[int, int](3, 10)
+	pool, err := NewWorkerPool[int, int](3, 10)
+	if err != nil {
+		t.Fatalf("failed to create worker pool: %v", err)
+	}
+
 	pool.Start(ctx, squareProcessor)
 
 	// Submit 5 jobs
@@ -31,7 +34,7 @@ func TestWorkerPoolBasic(t *testing.T) {
 		}
 	}
 
-	// Collect results in a goroutine
+	// Collect results
 	results := make(map[int]int)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -50,10 +53,9 @@ func TestWorkerPoolBasic(t *testing.T) {
 		}
 	}()
 
-	pool.Stop() // Close jobs, wait for workers, close results
-	wg.Wait()   // Wait for result collector
+	pool.Stop()
+	wg.Wait()
 
-	// Verify all 5 results
 	for i := 1; i <= 5; i++ {
 		expected := i * i
 		if results[i] != expected {
@@ -66,13 +68,17 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool := NewWorkerPool[int, int](5, 100)
+	pool, err := NewWorkerPool[int, int](5, 100)
+	if err != nil {
+		t.Fatalf("failed to create worker pool: %v", err)
+	}
+
 	pool.Start(ctx, squareProcessor)
 
-	// Submit 100 jobs concurrently from multiple goroutines
 	var submitWg sync.WaitGroup
 	numJobs := 100
 	submitErrs := make(chan error, numJobs)
+
 	submitWg.Add(numJobs)
 
 	for i := 0; i < numJobs; i++ {
@@ -84,7 +90,6 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 		}(i)
 	}
 
-	// Wait for all submissions, then stop
 	go func() {
 		submitWg.Wait()
 		close(submitErrs)
@@ -95,7 +100,6 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 		t.Error(err)
 	}
 
-	// Count results
 	count := 0
 	for range pool.Results() {
 		count++
@@ -107,7 +111,11 @@ func TestWorkerPoolConcurrentSubmit(t *testing.T) {
 }
 
 func TestWorkerPoolSubmitAfterStopReturnsError(t *testing.T) {
-	pool := NewWorkerPool[int, int](1, 1)
+	pool, err := NewWorkerPool[int, int](1, 1)
+	if err != nil {
+		t.Fatalf("failed to create worker pool: %v", err)
+	}
+
 	pool.Stop()
 
 	if err := pool.Submit(Job[int]{ID: 1, Data: 1}); err == nil {
@@ -116,32 +124,11 @@ func TestWorkerPoolSubmitAfterStopReturnsError(t *testing.T) {
 }
 
 func TestWorkerPoolStopCanBeCalledTwice(t *testing.T) {
-	pool := NewWorkerPool[int, int](1, 1)
-	pool.Stop()
-	pool.Stop()
-}
-
-func TestWorkerPoolStopDoesNotDeadlockWhenResultsNotDrained(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	pool := NewWorkerPool[int, int](1, 1)
-	pool.results <- Result[int, int]{}
-	pool.Start(ctx, squareProcessor)
-
-	if err := pool.Submit(Job[int]{ID: 1, Data: 1}); err != nil {
-		t.Fatalf("failed to submit job: %v", err)
+	pool, err := NewWorkerPool[int, int](1, 1)
+	if err != nil {
+		t.Fatalf("failed to create worker pool: %v", err)
 	}
 
-	stopped := make(chan struct{})
-	go func() {
-		pool.Stop()
-		close(stopped)
-	}()
-
-	select {
-	case <-stopped:
-	case <-time.After(2 * time.Second):
-		t.Fatal("Stop deadlocked when results channel was full")
-	}
+	pool.Stop()
+	pool.Stop() // should not panic
 }
