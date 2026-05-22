@@ -75,3 +75,15 @@
 <!-- Did everyone get environment set up? Any blockers? -->
 
 ---
+
+## Day 2 — May 19, 2026
+
+**Phase:** Documentation & Architecture
+
+### Completed
+
+- Created README structure
+- Created ADR template
+- Created ADR-001
+- Created initial architecture diagram
+- Practiced GitHub PR workflow
