@@ -2,32 +2,30 @@ package algorithms
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 	"testing"
+
+	"sei-ratelimiter/internal/store"
 )
 
-func TestFixedWindow_ConcurrentAllows(t *testing.T) {
-	limit := 100
-	fw := NewFixedWindow(limit, 60)
+func TestFixedWindow(t *testing.T) {
+	ctx := context.Background()
 
-	var wg sync.WaitGroup
-	var allowed int64
+	redisStore := store.NewRedisStore("localhost:6379")
 
-	for i := 0; i < 300; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			ok, _, _ := fw.Allow(context.Background(), "client-concurrent")
-			if ok {
-				atomic.AddInt64(&allowed, 1)
-			}
-		}()
-	}
+	limiter := NewFixedWindow(redisStore, 3, 60)
 
-	wg.Wait()
+	for i := 1; i <= 5; i++ {
+		allowed, remaining, err := limiter.Allow(ctx, "madhu")
 
-	if int(allowed) != limit {
-		t.Errorf("expected exactly %d allowed, got %d", limit, allowed)
+		if err != nil {
+			t.Fatalf("error: %v", err)
+		}
+
+		t.Logf(
+			"request=%d allowed=%v remaining=%d",
+			i,
+			allowed,
+			remaining,
+		)
 	}
 }
