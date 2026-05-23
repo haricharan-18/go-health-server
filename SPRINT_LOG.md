@@ -87,3 +87,24 @@
 - Created ADR-001
 - Created initial architecture diagram
 - Practiced GitHub PR workflow
+
+
+## Day 3 — May 20, 2026
+
+**Phase:** Foundation
+
+**Goal:** Go concurrency — goroutines, mutex, race conditions
+
+### Completed
+
+- All 5 members: goroutines and channels practice completed
+- Abhishek: race condition demo and worker pool pattern
+- Madhu: concurrent Allow() test with race checks
+- Gayathri: concurrent correctness tests and race verification
+- Hari: Docker networking exercise
+- Vishnu: CONCURRENCY.md, ADR-002 draft, Sprint Log Day 2 update
+
+### Notes
+
+<!-- Hardest concepts and blockers -->
+
