@@ -1,6 +1,3 @@
-cd ~/sei-ratelimiter
-
-cat > internal/algorithms/fixed_window_test.go << 'EOF'
 package algorithms
 
 import (
@@ -74,11 +71,3 @@ func TestFixedWindow_Concurrent(t *testing.T) {
 		t.Errorf("expected %d allowed, got %d", limit, allowed)
 	}
 }
-EOF
-
-git add internal/algorithms/fixed_window_test.go
-go vet ./...
-go build ./...
-go test -race -v ./...
-git commit -m "day5: resolve merge conflict in fixed_window_test.go"
-git push origin day5/abhishek-ci
