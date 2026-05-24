@@ -8,6 +8,7 @@ RUN go mod download
 
 COPY . .
 
+# Use main's explicit path, or your project's entry point
 RUN go build -o server ./main.go
 
 # Runtime stage
