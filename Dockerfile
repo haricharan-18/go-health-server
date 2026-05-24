@@ -1,4 +1,5 @@
-FROM golang:1.22-alpine
+# Build stage
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +8,14 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server .
+RUN go build -o server ./main.go
+
+# Runtime stage
+FROM alpine:3.19
+
+WORKDIR /app
+
+COPY --from=builder /app/server .
 
 EXPOSE 8080
 
