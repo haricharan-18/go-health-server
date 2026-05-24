@@ -2,14 +2,7 @@ package algorithms
 
 import "context"
 
-// Limiter interface
+// Limiter interface for all rate limiting algorithms
 type Limiter interface {
 	Allow(ctx context.Context, clientID string) (bool, int, error)
-}
-
-// Config for limiter
-type Config struct {
-	Algorithm  string
-	Limit      int
-	WindowSecs int
 }
