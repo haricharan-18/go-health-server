@@ -1,14 +1,34 @@
-FROM golang:1.24-alpine
+cd ~/sei-ratelimiter
+
+cat > Dockerfile << 'EOF'
+# Build stage
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-RUN go build -o server .
+RUN go build -o server ./cmd/server/main.go
+
+# Runtime stage
+FROM alpine:3.19
+
+WORKDIR /app
+
+COPY --from=builder /app/server .
 
 EXPOSE 8080
 
 CMD ["./server"]
+EOF
+
+git add Dockerfile
+grep -r "<<<<<<<" --include="*.go" --include="*.md" --include="*.yml" --include="Dockerfile" . || echo "No other conflicts found"
+go vet ./...
+go build ./...
+go test -race -v ./...
+git commit -m "day5: resolve Dockerfile merge conflict"
+git push origin day5/abhishek-ci
