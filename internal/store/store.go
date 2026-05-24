@@ -1,6 +1,9 @@
 package store
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 type Store interface {
 	Incr(ctx context.Context, key string) (int64, error)
@@ -9,6 +12,7 @@ type Store interface {
 
 // MemoryStore is a simple in-memory implementation for testing.
 type MemoryStore struct {
+	mu   sync.Mutex
 	data map[string]int64
 }
 
@@ -18,6 +22,8 @@ func NewMemoryStore() *MemoryStore {
 }
 
 func (m *MemoryStore) Incr(ctx context.Context, key string) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.data[key]++
 	return m.data[key], nil
 }
