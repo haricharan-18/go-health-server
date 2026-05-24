@@ -108,3 +108,35 @@
 
 <!-- Hardest concepts and blockers -->
 
+## Day 4 — May 21, 2026
+
+**Phase:** Foundation
+
+**Goal:** Docker fundamentals — Dockerfile, multi-stage builds, Redis CLI, Compose
+
+### Completed
+
+- Abhishek: multi-stage Dockerfile, Redis CLI deep dive, first k6 smoke test
+- Madhu: Redis data structure simulations for all 3 algorithms, key design doc
+- Gayathri: Redis test connection pattern, skip-not-fail pattern established
+- Hari: full 3-service docker-compose.yml with health checks and volumes
+- Vishnu: DOCKER_CONCEPTS.md, ADR-002, README How To Run section
+
+### Notes
+
+<!-- Add observations here -->
+
+---
+
+## Phase 1 Summary — Days 1–5
+
+**All 5 members achieved:**
+
+- Go 1.22.4 installed, WSL2 running, VS Code connected
+- GitHub SSH working, repo cloned, branch protection on main
+- HTTP /health server built and tested
+- Go concurrency understood: goroutines, mutex, race detector
+- Docker: Dockerfile, multi-stage builds, Compose, Redis CLI
+- CI pipeline live on GitHub Actions
+- Package structure and interfaces defined
+- Full 3-service stack running with one command
