@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"sei-ratelimiter/internal/algorithms"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/algorithms"
 )
 
 func RateLimiter(limiter algorithms.Limiter) func(http.Handler) http.Handler {
