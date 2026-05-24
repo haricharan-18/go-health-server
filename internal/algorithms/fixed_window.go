@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"sei-ratelimiter/internal/store"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/store"
 )
 
 type FixedWindow struct {

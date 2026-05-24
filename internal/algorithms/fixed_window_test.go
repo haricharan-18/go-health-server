@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"sei-ratelimiter/internal/store"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/store"
 )
 
 func TestFixedWindow(t *testing.T) {
