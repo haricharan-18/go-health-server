@@ -5,6 +5,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   app2:
     build:
@@ -12,8 +20,24 @@ services:
       dockerfile: Dockerfile.server2
     ports:
       - "8081:8081"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   redis:
     image: redis:7-alpine
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --appendonly yes
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
     ports:
       - "6379:6379"
