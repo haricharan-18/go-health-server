@@ -2,17 +2,25 @@ package algorithms
 
 import (
 	"context"
+	"net"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
-	"sei-ratelimiter/internal/store"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/store"
 )
 
 // TestFixedWindow_Integration validates basic Redis-backed behavior
 func TestFixedWindow_Integration(t *testing.T) {
-	ctx := context.Background()
+	// Check if Redis is reachable before running
+	conn, err := net.DialTimeout("tcp", "localhost:6379", 1*time.Second)
+	if err != nil {
+		t.Skipf("Redis not available at localhost:6379 — skipping integration test: %v", err)
+	}
+	conn.Close()
 
+	ctx := context.Background()
 	redisStore := store.NewRedisStore("localhost:6379")
 	limiter := NewFixedWindow(redisStore, 3, 60)
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sei-ratelimiter/pkg/counter"
+	"github.com/Zartex-the-art/sei-ratelimiter/pkg/counter"
 	"sync"
 )
 

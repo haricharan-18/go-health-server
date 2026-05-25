@@ -1,6 +1,3 @@
-cd ~/sei-ratelimiter
-
-cat > Dockerfile << 'EOF'
 # Build stage
 FROM golang:1.22-alpine AS builder
 
@@ -23,12 +20,3 @@ COPY --from=builder /app/server .
 EXPOSE 8080
 
 CMD ["./server"]
-EOF
-
-git add Dockerfile
-grep -r "<<<<<<<" --include="*.go" --include="*.md" --include="*.yml" --include="Dockerfile" . || echo "No other conflicts found"
-go vet ./...
-go build ./...
-go test -race -v ./...
-git commit -m "day5: resolve Dockerfile merge conflict"
-git push origin day5/abhishek-ci
