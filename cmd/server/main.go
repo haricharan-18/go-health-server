@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"sei-ratelimiter/internal/config"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/config"
 )
 
 func main() {
