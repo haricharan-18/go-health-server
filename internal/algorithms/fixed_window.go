@@ -2,48 +2,61 @@ package algorithms
 
 import (
 	"context"
-	"fmt"
+	"sync"
 	"time"
-
-	"github.com/Zartex-the-art/sei-ratelimiter/internal/store"
 )
 
 type FixedWindow struct {
-	store      store.Store
 	limit      int
 	windowSecs int
+	mu         sync.Mutex
+	counts     map[string]int
+	windows    map[string]time.Time
 }
 
-func NewFixedWindow(store store.Store, limit int, windowSecs int) *FixedWindow {
+func NewFixedWindow(_ interface{}, limit, windowSecs int) *FixedWindow {
 	return &FixedWindow{
-		store:      store,
 		limit:      limit,
 		windowSecs: windowSecs,
+		counts:     make(map[string]int),
+		windows:    make(map[string]time.Time),
 	}
 }
 
 func (fw *FixedWindow) Allow(ctx context.Context, clientID string) (bool, int, error) {
-	window := time.Now().Unix() / int64(fw.windowSecs)
+	fw.mu.Lock()
+	defer fw.mu.Unlock()
 
-	key := fmt.Sprintf("fw:%s:%d", clientID, window)
+	now := time.Now()
 
-	count, err := fw.store.Incr(ctx, key)
-	if err != nil {
-		return false, 0, err
+	windowStart, exists := fw.windows[clientID]
+
+	if !exists || now.Sub(windowStart) >= time.Duration(fw.windowSecs)*time.Second {
+		fw.counts[clientID] = 0
+		fw.windows[clientID] = now
 	}
 
-	if count == 1 {
-		err = fw.store.Expire(ctx, key, fw.windowSecs)
-		if err != nil {
-			return false, 0, err
-		}
+	fw.counts[clientID]++
+
+	count := fw.counts[clientID]
+
+	remaining := fw.limit - count
+
+	if remaining < 0 {
+		remaining = 0
 	}
 
-	remaining := fw.limit - int(count)
-
-	if int(count) > fw.limit {
+	if count > fw.limit {
 		return false, 0, nil
 	}
 
 	return true, remaining, nil
+}
+
+func (fw *FixedWindow) Reset(clientID string) {
+	fw.mu.Lock()
+	defer fw.mu.Unlock()
+
+	delete(fw.counts, clientID)
+	delete(fw.windows, clientID)
 }
