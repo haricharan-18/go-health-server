@@ -32,7 +32,7 @@ func TestFixedWindow_Integration(t *testing.T) {
 		t.Logf("request=%d allowed=%v remaining=%d", i, allowed, remaining)
 
 		// Assertions for clarity
-		if i <= 3 && !allowed {
+		if i <= 5 && !allowed {
 			t.Errorf("request %d: expected allowed=true within limit", i)
 		}
 		if i > 3 && allowed {
