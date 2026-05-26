@@ -90,3 +90,6 @@ func (r *RedisStore) HSet(
 ) error {
 	return r.client.HSet(ctx, key, values).Err()
 }
+func (r *RedisStore) Ping(ctx context.Context) error {
+	return r.client.Ping(ctx).Err()
+}
