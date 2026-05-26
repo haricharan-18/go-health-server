@@ -1,33 +1,16 @@
 package store
 
-import (
-	"context"
-	"sync"
-)
+import "context"
 
 type Store interface {
-	Incr(ctx context.Context, key string) (int64, error)
-	Expire(ctx context.Context, key string, seconds int) error
-}
+	Increment(ctx context.Context, key string, windowSecs int) (int64, error)
 
-// MemoryStore is a simple in-memory implementation for testing.
-type MemoryStore struct {
-	mu   sync.Mutex
-	data map[string]int64
-}
+	ZAdd(ctx context.Context, key string, score float64, member string) error
+	ZRemRangeByScore(ctx context.Context, key string, min, max float64) error
+	ZCount(ctx context.Context, key string, min, max float64) (int64, error)
 
-// NewMemoryStore creates a new in-memory store for testing.
-func NewMemoryStore() *MemoryStore {
-	return &MemoryStore{data: make(map[string]int64)}
-}
+	HGetAll(ctx context.Context, key string) (map[string]string, error)
+	HSet(ctx context.Context, key string, values map[string]interface{}) error
 
-func (m *MemoryStore) Incr(ctx context.Context, key string) (int64, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.data[key]++
-	return m.data[key], nil
-}
-
-func (m *MemoryStore) Expire(ctx context.Context, key string, seconds int) error {
-	return nil
+	Del(ctx context.Context, keys ...string) error
 }
