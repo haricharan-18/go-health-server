@@ -19,10 +19,9 @@ func TestFixedWindow_Integration(t *testing.T) {
 		t.Skipf("Redis not available at localhost:6379 — skipping integration test: %v", err)
 	}
 	conn.Close()
-
 	ctx := context.Background()
 	redisStore := store.NewRedisStore("localhost:6379")
-	limiter := NewFixedWindow(redisStore, 3, 60)
+	limiter := NewFixedWindow(5, 60, redisStore)
 
 	for i := 1; i <= 5; i++ {
 		allowed, remaining, err := limiter.Allow(ctx, "madhu")
@@ -33,10 +32,10 @@ func TestFixedWindow_Integration(t *testing.T) {
 		t.Logf("request=%d allowed=%v remaining=%d", i, allowed, remaining)
 
 		// Assertions for clarity
-		if i <= 3 && !allowed {
+		if i <= 5 && !allowed {
 			t.Errorf("request %d: expected allowed=true within limit", i)
 		}
-		if i > 3 && allowed {
+		if i > 5 && allowed {
 			t.Errorf("request %d: expected allowed=false over limit", i)
 		}
 	}
@@ -47,9 +46,9 @@ func TestFixedWindow_Concurrent(t *testing.T) {
 	ctx := context.Background()
 
 	// Use in-memory store for deterministic concurrent testing
-	memStore := store.NewMemoryStore()
+	memStore := store.NewFakeStore()
 	limit := 100
-	limiter := NewFixedWindow(memStore, limit, 60)
+	limiter := NewFixedWindow(limit, 60, memStore)
 
 	var wg sync.WaitGroup
 	var allowed int64
