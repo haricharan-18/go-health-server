@@ -6,7 +6,7 @@ Distributed Rate Limiter as a Service — Zartex SEI Project 1
 
 ## Architecture
 
-![Architecture](docs/architecture-v1.png)
+![Fixed Window Sequence](docs/diagrams/fixed-window-sequence.png)
 
 ---
 
