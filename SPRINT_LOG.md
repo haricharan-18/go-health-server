@@ -140,3 +140,19 @@
 - CI pipeline live on GitHub Actions
 - Package structure and interfaces defined
 - Full 3-service stack running with one command
+
+
+## Day 6 — Phase 2 Kick-Off
+
+### Vishnu
+- Updated Fixed Window documentation
+- Added algorithm comparison table
+- Created fixed-window-sequence diagram
+- Added ADR-004
+- Updated sprint documentation
+
+### Team Progress
+- Fixed Window implementation started
+- Test suite preparation ongoing
+- Docker hardening ongoing
+- k6 integration testing ongoing
