@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"healthserver/internal/limiter"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/limiter"
 )
 
 var limiterInstance = limiter.NewFixedWindowLimiter(3, 10*time.Second)
