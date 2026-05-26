@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"healthserver/internal/limiter"
+	"github.com/Zartex-the-art/sei-ratelimiter/internal/limiter"
 )
 
 func main() {
