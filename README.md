@@ -154,3 +154,52 @@ sei-ratelimiter/
 ├── README.md
 ├── server_test.go
 └── SPRINT_LOG.md
+
+
+## Fixed Window Algorithm
+
+The Fixed Window algorithm limits requests within a fixed time duration.
+
+Example:
+- Limit: 5 requests
+- Window: 60 seconds
+
+Flow:
+1. Client sends request
+2. Redis counter increments using INCR
+3. Redis EXPIRE sets TTL on first request
+4. If count <= limit:
+   request allowed
+5. Else:
+   request blocked
+
+Redis Commands:
+- INCR
+- EXPIRE
+
+Advantages:
+- Simple
+- Fast
+- Low memory usage
+
+Tradeoff:
+Fixed Window suffers from the Boundary Burst problem.
+A client can send requests at the end of one window and beginning of another window, effectively doubling request rate.
+
+Best Use Cases:
+- Simple APIs
+- Low complexity systems
+- Basic rate limiting
+
+
+## Algorithm Comparison
+
+| Property | Fixed Window | Sliding Window | Token Bucket |
+|----------|---------------|----------------|---------------|
+| Redis data type | String | Sorted Set | Hash |
+| Memory per client | O(1) | O(requests in window) | O(1) |
+| Boundary burst | Yes (bug) | No | No |
+| Burst allowance | No | No | Yes |
+| Complexity | Low | Medium | Medium |
+| Best for | Simple APIs | Precision-critical | Bursty clients |
+| Implemented | Day 6-7 | Day 8 | Day 9 |
