@@ -114,46 +114,70 @@ docker compose down
 
 ## Project Structure
 
+```text
 sei-ratelimiter/
 ├── cmd/
+│   └── server/                  # Entry point — wires packages, starts server
+│       └── main.go
+│
+├── internal/
+│   ├── algorithms/              # Rate limiting logic
+│   │   ├── limiter.go           # Limiter interface
+│   │   ├── fixed_window.go      # Fixed Window algorithm
+│   │   ├── fixed_window_test.go # Fixed Window tests
+│   │   ├── sliding_window.go    # Sliding Window (Phase 2)
+│   │   └── token_bucket.go      # Token Bucket (Phase 2)
+│   │
+│   ├── api/                     # HTTP handlers
+│   ├── config/                  # Environment variable loading
+│   ├── store/                   # Redis client/store layer
+│   └── testhelpers/             # Shared test utilities
+│
+├── tests/
+│   └── load/                    # k6 load test scripts
 │
 ├── docs/
-│   ├── decisions/
+│   ├── decisions/               # Architecture Decision Records
 │   │   ├── 0000-template.md
 │   │   ├── 0001-go-language-choice.md
 │   │   ├── 0002-concurrency-model.md
 │   │   ├── 0002-infrastructure-tooling.md
-│   │   └── 0003-package-structure.md
+│   │   ├── 0003-package-structure.md
+│   │   └── 0004-fixed-window-first.md
 │   │
-│   ├── diagrams/
+│   ├── diagrams/                # Architecture diagrams
 │   │   ├── architecture-v1.png
 │   │   ├── architecture-v2.png
-│   │   └── architecture-v3.png
+│   │   ├── architecture-v3.png
+│   │   ├── architecture-v4.png
+│   │   └── fixed-window-sequence.png
 │   │
 │   ├── ARCHITECTURE.md
 │   ├── CONCURRENCY.md
 │   ├── DOCKER_CONCEPTS.md
-│   ├── redis_race_notes.md
-│   └── SHARED_STATE.md
+│   ├── REDIS_KEY_DESIGN.md
+│   ├── SHARED_STATE.md
+│   ├── TEST_CONVENTIONS.md
+│   └── TEST_STRATEGY.md
 │
-├── internal/
-│   └── algorithms/
-│       ├── fixed_window.go
-│       ├── fixed_window_test.go
-│       └── limiter.go
+├── .github/
+│   └── workflows/               # GitHub Actions CI
 │
 ├── pkg/
-│
 ├── practice/
 │   ├── goroutine.go
 │   ├── mutex.go
 │   └── race.go
 │
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
 ├── go.mod
-├── main.go
 ├── README.md
 ├── server_test.go
 └── SPRINT_LOG.md
+```
 
 
 ## Fixed Window Algorithm
