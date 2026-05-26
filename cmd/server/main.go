@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"healthserver/internal/middleware"
 	"log"
 	"net/http"
 	"os"
@@ -31,8 +32,7 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/health", healthHandler)
-
+	http.Handle("/health", middleware.RateLimit(http.HandlerFunc(healthHandler)))
 	log.Println("Server running on port", port)
 
 	log.Fatal(http.ListenAndServe(":"+port, nil))
